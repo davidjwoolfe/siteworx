@@ -12,6 +12,7 @@ the model under unfitted illustrative parameters, never biological results.
 
 | File | What it is |
 |---|---|
+| [`BRIEFING.md`](BRIEFING.md) | **Start here if you have not read the code.** A ~2,500-word prose account of the whole operation: the reasoning, the choices, the dead ends, what each experiment decided, and what the work cannot yet support. Needs nothing else open |
 | [`OBJECTIVE.md`](OBJECTIVE.md) | The research objective. Formal definition, state-transition architecture, targets, endpoints, limitations, validation pathway, and the experiments that tested it |
 | [`results/runs.md`](results/runs.md) | Full output of all nine experiments |
 | [`REFERENCES.md`](REFERENCES.md) | 20 references, each verified against Crossref; plus an explicit list of what could **not** be verified |
