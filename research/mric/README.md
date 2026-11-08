@@ -19,6 +19,7 @@ the model under unfitted illustrative parameters, never biological results.
 | [`model/mric.py`](model/mric.py) | The engine. Parameter provenance in `default_params()` |
 | [`model/experiments.py`](model/experiments.py) | E1–E9, each written so it can fail |
 | [`model/test_mric.py`](model/test_mric.py) | 13 invariant checks on the engine |
+| [`VISUAL-PROMPT.md`](VISUAL-PROMPT.md) | Design prompt for a five-panel state-space infographic cascade. Carries a palette validated in light and dark, plus the integrity rules that keep model output visually distinct from published evidence |
 
 ## Run
 
