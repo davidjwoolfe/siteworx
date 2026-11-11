@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Iron Keep</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;background:#000;overflow:hidden;color:#d8d2c0;
+  font-family:"Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif;user-select:none;-webkit-user-select:none}
+#gl,#ov{position:absolute;left:0;top:0;width:100%;height:100%;display:block}
+#gl{will-change:transform}
+#ov{pointer-events:none}
+#dmg,#low{position:absolute;inset:0;pointer-events:none;opacity:0}
+#dmg{background:radial-gradient(ellipse at center,rgba(150,0,0,.04) 25%,rgba(200,0,0,.9) 100%)}
+#low{background:radial-gradient(ellipse at center,rgba(0,0,0,0) 45%,rgba(140,0,0,.7) 100%)}
+#low.on{animation:pulse 1s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:.25}50%{opacity:.8}}
+.hud{position:absolute;pointer-events:none;display:none;text-shadow:0 2px 0 #000,0 0 8px #000}
+body.playing .hud{display:block}
+#hl{left:2.2vw;bottom:2.4vh}
+#hr{right:2.2vw;bottom:2.4vh;text-align:right}
+#hc{left:calc(2.2vw + 25vh);bottom:2.4vh;display:none;gap:.8vh}
+body.playing #hc{display:flex}
+.lbl{font-size:1.5vh;letter-spacing:.35em;color:#8f8a7c}
+.big{font:700 6.4vh/1 Impact,"Arial Narrow",system-ui,sans-serif;letter-spacing:.03em;color:#e9e2cc}
+.big small{font-size:3.2vh;color:#a59f8e;margin-left:.4em}
+#hpbar{width:20vh;height:.9vh;background:#1b1512;border:1px solid #3a302a;margin-top:.5vh}
+#hpfill{height:100%;background:linear-gradient(#d33,#811);width:100%}
+#hl.lowhp .big{color:#ff4a3a}
+.key{display:block;width:6vh;height:6vh;border:1px solid #3a3530;background:rgba(10,8,8,.55);opacity:.45;filter:grayscale(1) brightness(.6)}
+.key.have{opacity:1;filter:none;border-color:#8a7a50}
+#stats{left:2.2vw;top:2vh;font-size:1.55vh;letter-spacing:.22em;color:#9d978a;line-height:1.7}
+#stats b{color:#e0d8c0;font-weight:400}
+#msg{position:absolute;left:50%;top:13vh;transform:translateX(-50%);font-size:2.6vh;letter-spacing:.14em;
+  color:#f0e2b0;text-shadow:0 2px 0 #000,0 0 12px #000;pointer-events:none;opacity:0;transition:opacity .25s;white-space:nowrap}
+#fps{position:absolute;right:1vw;top:1vh;font:1.5vh monospace;color:#7c7;display:none}
+.screen{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;
+  background:radial-gradient(ellipse at center,rgba(8,6,6,.55) 0%,rgba(0,0,0,.93) 85%);text-align:center;z-index:5}
+.screen.on{display:flex}
+h1{font-size:11vh;letter-spacing:.3em;margin-right:-.3em;color:#d9cfb4;font-weight:400;
+  text-shadow:0 0 30px rgba(255,120,30,.45),0 4px 0 #000}
+h1 span{color:#b3261e}
+h2{font-size:6vh;letter-spacing:.3em;margin-right:-.3em;font-weight:400;margin-bottom:2vh;text-shadow:0 4px 0 #000}
+.sub{font-size:2vh;letter-spacing:.55em;margin-right:-.55em;color:#a09a8a;margin:1vh 0 4vh}
+.ctl{display:grid;grid-template-columns:auto auto;gap:.5vh 2.4vh;font-size:1.75vh;text-align:left;color:#b9b3a3;margin-bottom:3.5vh}
+.ctl b{color:#e9d9a0;font-weight:400;text-align:right;letter-spacing:.08em}
+.diffs{display:flex;gap:1.4vh;margin-bottom:3vh}
+button{font:inherit;font-size:1.9vh;letter-spacing:.25em;color:#cfc8b5;background:rgba(20,16,14,.8);
+  border:1px solid #4a4038;padding:1.1vh 2.2vh;cursor:pointer}
+button:hover{border-color:#b89a52;color:#fff}
+button.sel{border-color:#b3261e;color:#fff;background:rgba(90,16,14,.75)}
+button.go{font-size:2.5vh;padding:1.5vh 4.5vh;border-color:#b89a52;color:#f0e2b0}
+.note{font-size:1.5vh;color:#7d7769;margin-top:2.2vh;letter-spacing:.12em}
+.res{display:grid;grid-template-columns:auto auto;gap:.8vh 3vh;font-size:2.6vh;margin-bottom:3.5vh;text-align:left}
+.res b{text-align:right;color:#f0e2b0;font-weight:400}
+#s-dead h2{color:#c22a20}
+#mutebtn{position:absolute;right:1.4vw;bottom:1.6vh;z-index:6;font-size:1.4vh;padding:.7vh 1.2vh;display:none}
+body.menu #mutebtn{display:block}
+</style>
+</head>
+<body class="menu">
+<canvas id="gl"></canvas>
+<canvas id="ov"></canvas>
+<div id="dmg"></div><div id="low"></div>
+
+<div id="stats" class="hud"></div>
+<div id="hl" class="hud"><div class="lbl">HEALTH</div><div class="big" id="hp">100</div><div id="hpbar"><div id="hpfill"></div></div></div>
+<div id="hc" class="hud"><canvas id="k0" class="key" width="96" height="96"></canvas><canvas id="k1" class="key" width="96" height="96"></canvas></div>
+<div id="hr" class="hud"><div class="lbl" id="wname">PISTOL</div><div class="big"><span id="mag">8</span><small id="res">16</small></div></div>
+<div id="msg"></div><div id="fps"></div>
+
+<div id="s-load" class="screen on"><div class="sub">RAISING THE WALLS…</div></div>
+
+<div id="s-title" class="screen">
+  <h1>IRON <span>KEEP</span></h1>
+  <div class="sub">ESCAPE THE CASTLE · 1943</div>
+  <div class="ctl">
+    <b>W A S D</b><span>Move and strafe</span>
+    <b>MOUSE</b><span>Turn</span>
+    <b>LEFT CLICK</b><span>Fire</span>
+    <b>R</b><span>Reload</span>
+    <b>1 / 2 / WHEEL</b><span>Switch weapon</span>
+    <b>E / SPACE</b><span>Open doors, push walls</span>
+    <b>SHIFT</b><span>Run</span>
+    <b>M</b><span>Map</span>
+    <b>N</b><span>Mute</span>
+    <b>ESC</b><span>Pause</span>
+  </div>
+  <div class="diffs" id="diffs">
+    <button data-d="0">RECRUIT</button><button data-d="1" class="sel">SOLDIER</button><button data-d="2">VETERAN</button>
+  </div>
+  <button class="go" id="b-start">CLICK TO START</button>
+  <div class="note" id="best"></div>
+  <div class="note">Find the silver key, raid the armory, take the gold key from the officers, and get out.</div>
+</div>
+
+<div id="s-pause" class="screen">
+  <h2>PAUSED</h2>
+  <button class="go" id="b-resume">RESUME</button>
+  <div style="height:1.6vh"></div>
+  <button id="b-restart">RESTART LEVEL</button>
+  <div style="height:1.6vh"></div>
+  <button id="b-quit">TITLE SCREEN</button>
+  <div class="note">[ and ] adjust mouse sensitivity · F3 shows frame rate</div>
+</div>
+
+<div id="s-dead" class="screen">
+  <h2>YOU DIED</h2>
+  <div class="sub" id="deadsub">THE KEEP CLAIMS ANOTHER</div>
+  <button class="go" id="b-retry">CLICK TO RETRY</button>
+</div>
+
+<div id="s-win" class="screen">
+  <h2>ESCAPED</h2>
+  <div class="res">
+    <span>TIME</span><b id="r-time"></b>
+    <span>KILLS</span><b id="r-kills"></b>
+    <span>SECRETS</span><b id="r-secrets"></b>
+    <span>TREASURE</span><b id="r-treasure"></b>
+    <span>BEST TIME</span><b id="r-best"></b>
+  </div>
+  <button class="go" id="b-again">PLAY AGAIN</button>
+</div>
+<button id="mutebtn">SOUND: ON</button>
+
+<script src="js/art.js"></script>
+<script src="js/audio.js"></script>
+<script src="js/level.js"></script>
+<script src="js/render.js"></script>
+<script src="js/game.js"></script>
+</body>
+</html>
